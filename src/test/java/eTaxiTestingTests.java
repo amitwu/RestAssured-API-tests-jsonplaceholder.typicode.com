@@ -298,7 +298,6 @@ public class eTaxiTestingTests{
 
         given()
                 .spec(baseRequestSpec)
-                // .pathParam("userid",3)
                 .body(createNewPost)
                 .log().all()
                 .when()
@@ -366,82 +365,60 @@ public class eTaxiTestingTests{
     //expected result: Test should failed
     @Test
     public void deleteTitleFromPosts() {
-        Response res = given()
-                .contentType("application/json")
+       given()
+               .spec(baseRequestSpec)
                 .log().all()
                 .when()
                 .delete("posts/?userId=1&id=5&title=\"nesciunt quas odio\"")
                 .then()
-                //.log().all()
-          //      .spec(notFoundResponse)
-                .contentType(ContentType.JSON)
-                .extract() //extrcat all the response
-                .response();
+                .assertThat()
+                .statusCode(expectedResponseNotFoundStatus)
+                .body("title", containsString("nesciunt quas odio"))//body dont change
+;
     }
 
 
 //COMMENTS
 @Test
-    //TC10 Create new comments with long name and support nicode Texts
-    //expectec result
+    //TC16: User create new comments with long name and support Unicode Texts in different fields related to post ID: 2 mix couple of test cases
+    //Expectec result: Action should failed due to invalid mail format
     public void createNewCommentsWithLongText (){
-        String b = "{\n" +
+        String createNewComments = "{\n" +
                 "   \"id\": \"8\",\n" +
-                "   \"name\": \"et omnis dolorem\",\n" +
-                "   \"email\": \"Mallory_Kunze@marie.org\",\n" +
+                "   \"name\": \"et omnis dolorem Long Long one......\",\n" +
+                "   \"email\": \"Mallory_Kunze@marie!!!!!!org\",\n" +
                 "   \"postId\": \"2\",\n" +
-                "   \"body\": \"SSamantha very long long long सौभाग्य है !@^%#&** :) string ..\",\n" +
+                "   \"body\": \"Samantha very long long long सौभाग्य है !@^%#&** : pr�s-*) string ..\",\n" +
               "}";
         given()
-                .header("Content-Type", "application/json").
-                when()
-                .post("/comments/").
+                .spec(baseRequestSpec)
+                .body(createNewComments)
+                .log().all()
+                .when()
+                    .post(EndPoint.COMMENTS_PATH).
                 then()
-                .contentType(ContentType.JSON)
-          //      .spec(createdResponse).log().all()
-                .body("name", IsEqual.equalTo("et omnis dolorem")) //Should be failed beacuse cannot update the field
-                .extract() //extrcat all the response
-                .response();
+                .assertThat()//Fields should be update
+                .statusCode(expectedResponseNotFoundStatus)
+                .body("name", containsString("et omnis dolorem")) //Should be failed beacuse cannot update the field //verify name is not update
+                .body("email", containsString("Mallory_Kunze@marie@org")) ;//Should be failed beacuse cannot update the field //verify email is not update
 
     }
 
 
-    //TC10 Create new comments with incorect email format
-    //expectec result
+    //TC17: Now that we have relation we can try break the relations between the tables
+    //Expected result:change the title of the post an observed comments are still exists
+    //TBD
 
-    @Test
-    //TC10 Create new comments with long name and support nicode Texts
-    //expectec result
-    public void createNewCommentsWithIncorrectemailFormat (){
-        String b = "{\n" +
-                "   \"id\": \"8\",\n" +
-                "   \"name\": \"et omnis dolorem\",\n" +
-                "   \"email\": \"Mallory_Kunze.marie.org\",\n" +
-                "   \"postId\": \"2\",\n" +
-                "   \"body\": \"SSamantha very long long long सौभाग्य है !@^%#&** :) string ..\",\n" +
-                "}";
-        given()
-                .header("Content-Type", "application/json").
-                when()
-                .post("/comments/").
-                then()
-                .contentType(ContentType.JSON)
-            //    .spec(createdResponse).log().all()
-                //.body("name", IsEqual.equalTo("")) //Should be failed beacuse cannot update the field
-                .extract() //extrcat all the response
-                .response();
+    //TC18:update users id and observed all data saved
+    //Expected result: All data should be saved
+    //TBD
 
-    }
-
-    //TC10 Now that we have relation we can try break the realtions between the tables
-    //change the title of the post an observed comments are still exists
-    //expectec result
-
-    //update  users id and observed all data saved
-    //expectec result
+    //TC18:Delete comments id
+    //Expected result: Action should be failed
+    //TBD
 
 
-    //additonal test are:
+    //Additional test cases are:
     //take the service of posts down and create new commnets
     //create /delete / edit  100, 1K, 5K , 10K post simusutensly
     //create /delete /edit 00, 1K, 5K , 10K comments simusutensly

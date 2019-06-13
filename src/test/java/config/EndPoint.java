@@ -7,6 +7,7 @@ public interface EndPoint {
     String POST_PATH = "/posts";
     String POST_USER_ID_PATH = "/posts/{userid}";
     String DELETE_USER_ID_PATH = "/posts/{id}";
+    String COMMENTS_PATH = "/comments";
 
 
 }
