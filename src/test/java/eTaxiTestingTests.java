@@ -35,6 +35,7 @@ public class eTaxiTestingTests{
     public static RequestSpecification baseRequestSpec;
 
     private int expectedResponseSuccessStatus = 200;
+    private int expectedResponseCreatedStatus = 201;
     private int expectedResponseServerErrorStatus = 505;
     private int expectedResponseNotFoundStatus = 404;
 
@@ -254,57 +255,91 @@ public class eTaxiTestingTests{
 
 //POSTS Test Cases
 
-    //TC10 create new posts to userid #3 with very long title
-    //expectec result
+    //TC11 - Create new posts to userid #3 with very long title
+    //Expected Result: Title should be limit
 @Test
     public void createNewPosts() {
         String createNewPost = "{\n" +
                 "   \"userId\": \"3\",\n" +
-                "   \"title\": \"foo\",\n" +
+                "   \"title\": \"Very long long Title Support...\",\n" +
                 "   \"body\": \"bar\"\n" +
                 "}";
 
         System.out.println(createNewPost);
 
-        Response res = given()
-                .contentType("application/json")
+        given()
+                .spec(baseRequestSpec)
+               // .pathParam("userid",3)
                 .body(createNewPost)
                 .log().all()
                 .when()
-                .post("/posts")
+                    .post(EndPoint.POST_PATH)
                 .then()
-                //.log().all()
-            //    .spec(createdResponse)
-                .contentType(ContentType.JSON)
-                .extract() //extrcat all the response
-                .response();
+                .log().all()
+                .assertThat()
+                .statusCode(expectedResponseNotFoundStatus)
+                .log().all()
+                .body("title", containsString("Very long long Title Support..."))
+        ;//field should not be change
     }
 
 
-    //TC10 create new posts to userid #3 with very unicode / non-unicode title
-    //expectec result
-
-
-
-    //TC10 try to delete userId 1 and post #5 (userId=1&id=5) from the post messgae
-    //expected result: action should success
+    ///TC12 - create new posts to userid #3 with very unicode / non-unicode title body (should done on two differnt tests
+    //expectec result: Action should success or failed according to the spec
     @Test
-    public void deleteUserIdFromPosts() {
-        Response res = given()
-                .contentType("application/json")
+    public void createNewPostsUnicodeAndBodyUnicodeAndNonUniCode() {
+        String createNewPost = "{\n" +
+                "   \"userId\": \"3\",\n" +
+                "   \"title\": \"UniCode-Non Unicode Char on the title Clementine Bauch 放心測試 Samantha pr�s-*\",\n" +
+                "   \"body\": \"UniCode-Non Unicode Char on the body Clementine Bauch 放心測試 Samantha pr�s-*\"\n" +
+                "}";
+
+        //System.out.println(createNewPost);
+
+        given()
+                .spec(baseRequestSpec)
+                // .pathParam("userid",3)
+                .body(createNewPost)
                 .log().all()
                 .when()
-                .delete("/posts/userId=1&id=5")
+                .post(EndPoint.POST_PATH)
                 .then()
-                //.log().all()
-                .spec(TestConfig.successResponse)
-                .contentType(ContentType.JSON)
-                .extract() //extrcat all the response
-                .response();
+                .log().all()
+                .assertThat()
+                .statusCode(expectedResponseCreatedStatus)
+                .log().all()
+                .body("title", containsString("UniCode-Non Unicode Char on the title Clementine Bauch 放心測試 Samantha pr�s-*"))
+                .body("body", containsString("UniCode-Non Unicode Char on the title Clementine Bauch 放心測試 Samantha pr�s-*"))
+        ;//fields should not be change
+    }
+    //TC13 try to delete userId 1 and post #5 (userId=1&id=5) from the post messgae
+    //Expected result: action should success
+    @Test
+    public void deleteUserIdFromPosts() {
+      //  String deletePost = "{\n" +
+     //           "   \"postId\": \"1\",\n" +
+       //         "   \"id\": \"5\",\n" +
+       //         "}";
+        given()
+                .spec(baseRequestSpec)
+                .pathParam("id",1)
+                .pathParam("id",1)
+                //.pathParam("id",4)
+                //.body(deletePost)
+                .log().all()
+                .when()
+                .delete(EndPoint.DELETE_USER_ID_PATH)
+                .then()
+                .assertThat()
+                .statusCode(expectedResponseSuccessStatus)
+                .log().all()
+                //ID shouldnt exists
+                .body("id", containsString("quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"));
+
     }
 
-    //TC10 try to create post w/o title
-    //expectec result
+    //TC14: User try to create POST w/o title
+    //Expected result: Action should failed.
 
     @Test
     public void createNewPostsWithoutTitle() {
@@ -315,21 +350,19 @@ public class eTaxiTestingTests{
 
         System.out.println(b);
 
-        Response res = given()
-                .contentType("application/json")
+       given()
+                .spec(baseRequestSpec)
                 .body(b)
                 .log().all()
                 .when()
                 .post("/posts")
                 .then()
-                //.log().all()
-           //     .spec(createdResponse)
-                .contentType(ContentType.JSON)
-                .extract() //extrcat all the response
-                .response();
+                .assertThat()
+                .statusCode(expectedResponseNotFoundStatus);
+
     }
 
-    //TC10 try to delete  the title from the post
+    //TC15: User try to delete the title from the post
     //expected result: Test should failed
     @Test
     public void deleteTitleFromPosts() {
