@@ -5,6 +5,7 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.apache.commons.lang3.ObjectUtils;
 import org.hamcrest.core.IsEqual;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -51,6 +52,12 @@ public class TestCases {
     private String JsonFormatDelimiters = "Clementine Bauch <> ! & * $ # @ ~ \\ {} \"";
     private String defaultEmail = "Nathan@yesenia.net";
     private String incorrectEmailFormat = "Nathan@kuku@net";
+    //Posts
+    private String postsDefaultTitle = "maxime id vitae nihil numquam";
+    private String postsDefaultPostId = "23";
+    private String postsDefaultBody = "veritatis unde neque eligendi\nquae quod architecto quo neque vitae\nest illo sit tempora doloremque fugit quod\net et vel beatae sequi ullam sed tenetur perspiciatis";
+    private String postsDefaultUserId = "3";
+
 
 
 
@@ -234,9 +241,9 @@ public class TestCases {
     //Expected Results: All values back to defaults
 
 //POSTS Test Cases
-
+    //We can repeat  all use case with relevant parameters as previous test cases
     //TC11 - Create new posts to userid #3 with very long title
-    //Expected Result: Title should be limit
+    //Expected Result: Title should be limit or valid
 @Test
     public void createNewPosts() {
         String createNewPost = "{\n" +
@@ -245,37 +252,27 @@ public class TestCases {
                 "   \"body\": \"bar\"\n" +
                 "}";
 
-        System.out.println(createNewPost);
-
-        given()
-                .spec(baseRequestSpec)
-               // .pathParam("userid",3)
-                .body(createNewPost)
-                .log().all()
-                .when()
-                    .post(EndPoint.POST_PATH)
-                .then()
-                .log().all()
-                .assertThat()
-                .statusCode(expectedResponseNotFoundStatus)
-                .log().all()
-                .body("title", containsString("Very long long Title Support..."))
-        ;//field should not be change
+    given()
+            .spec(baseRequestSpec)
+            .body(createNewPost)
+            .log().all()
+    .when()
+            .post(EndPoint.POST_PATH)
+    .then()
+            .assertThat()
+            .statusCode(expectedResponseCreatedStatus)
+            .log().all()
+            .body("title", IsEqual.equalTo("Very long long Title Support..."));
     }
-
-
     ///TC12 - create new posts to userid #3 with very unicode / non-unicode title body (should done on two differnt tests
     //expectec result: Action should success or failed according to the spec
     @Test
     public void createNewPostsUnicodeAndBodyUnicodeAndNonUniCode() {
         String createNewPost = "{\n" +
-                "   \"userId\": \"3\",\n" +
-                "   \"title\": \"UniCode-Non Unicode Char on the title Clementine Bauch 放心測試 Samantha pr�s-*\",\n" +
-                "   \"body\": \"UniCode-Non Unicode Char on the body Clementine Bauch 放心測試 Samantha pr�s-*\"\n" +
+                "   \"Id\": \"3\",\n" +
+                "   \"title\": \"UniCode Non-Unicode Char on the title Clementine Bauch 放心測試 Samantha pr�s-*\",\n" +
+                "   \"body\": \"UniCode Non-Unicode Char on the body Clementine Bauch 放心測試 Samantha pr�s-*\"\n" +
                 "}";
-
-        //System.out.println(createNewPost);
-
         given()
                 .spec(baseRequestSpec)
                 .body(createNewPost)
@@ -287,21 +284,16 @@ public class TestCases {
                 .assertThat()
                 .statusCode(expectedResponseCreatedStatus)
                 .log().all()
-                .body("title", containsString("UniCode-Non Unicode Char on the title Clementine Bauch 放心測試 Samantha pr�s-*"))
-                .body("body", containsString("UniCode-Non Unicode Char on the title Clementine Bauch 放心測試 Samantha pr�s-*"))
-        ;//fields should not be change
+                .body("title", containsString("UniCode Non-Unicode Char on the title Clementine Bauch 放心測試 Samantha pr�s-*"))
+                .body("body", containsString("UniCode Non-Unicode Char on the title Clementine Bauch 放心測試 Samantha pr�s-*"))
+        ;
     }
     //TC13 try to delete userId 1 and post #5 (userId=1&id=5) from the post messgae
-    //Expected result: action should success
+    //Expected result: Action should success
     @Test
     public void deleteUserIdFromPosts() {
-      //  String deletePost = "{\n" +
-     //           "   \"postId\": \"1\",\n" +
-       //         "   \"id\": \"5\",\n" +
-       //         "}";
         given()
                 .spec(baseRequestSpec)
-                .pathParam("id",1)
                 .pathParam("id",1)
                 //.pathParam("id",4)
                 //.body(deletePost)
@@ -312,33 +304,29 @@ public class TestCases {
                 .assertThat()
                 .statusCode(expectedResponseSuccessStatus)
                 .log().all()
-                //ID shouldnt exists
-                .body("id", containsString("quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"));
-
+                //ID shouldn't exists
+                .body("id", IsEqual.equalTo(null));
+        //Assert all values are null or empry
     }
-
     //TC14: User try to create POST w/o title
     //Expected result: Action should failed.
 
     @Test
     public void createNewPostsWithoutTitle() {
-        String b = "{\n" +
+        String createNewPostWithoutTitle = "{\n" +
                 "   \"userId\": \"3\",\n" +
                 "   \"body\": \"bar\"\n" +
                 "}";
-
-        System.out.println(b);
-
        given()
                 .spec(baseRequestSpec)
-                .body(b)
+                .body(createNewPostWithoutTitle)
                 .log().all()
                 .when()
                 .post("/posts")
                 .then()
                 .assertThat()
                 .statusCode(expectedResponseNotFoundStatus);
-
+//Assert that action should be failed verify post not created
     }
 
     //TC15: User try to delete the title from the post
@@ -353,12 +341,11 @@ public class TestCases {
                 .then()
                 .assertThat()
                 .statusCode(expectedResponseNotFoundStatus)
-                .body("title", containsString("nesciunt quas odio"))//body dont change
+                .body("title", containsString("nesciunt quas odio"))//body should not  change
 ;
     }
 
-
-//COMMENTS
+//COMMENTS Test Cases
 @Test
     //TC16: User create new comments with long name and support Unicode Texts in different fields related to post ID: 2 mix couple of test cases
     //Expectec result: Action should failed due to invalid mail format
@@ -381,7 +368,6 @@ public class TestCases {
                 .statusCode(expectedResponseNotFoundStatus)
                 .body("name", containsString("et omnis dolorem")) //Should be failed beacuse cannot update the field //verify name is not update
                 .body("email", containsString("Mallory_Kunze@marie@org")) ;//Should be failed beacuse cannot update the field //verify email is not update
-
     }
 
 
@@ -399,9 +385,12 @@ public class TestCases {
 
 
     //Additional test cases are:
-    //take the service of posts down and create new commnets
-    //create /delete / edit  100, 1K, 5K , 10K post simusutensly
-    //create /delete /edit 00, 1K, 5K , 10K comments simusutensly
+    //Shutdown the service of posts down and create new comment
+    //TBD
+    //create /delete / edit  100, 1K, 5K , 10K post simultaneously
+    //TBD
+    //create /delete /edit 00, 1K, 5K , 10K comments simultaneously
+    //TBD
 
 
 }
