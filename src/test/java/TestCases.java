@@ -44,12 +44,13 @@ public class TestCases {
     //Expected Values
     private String defaultName = "Clementine Bauch";
     private String defaultUserName = "Samantha";
-
+    private String defaultUserId = "3";
     private String expectedlongString = "Samantha very long long long long long long long long long long long long string";
-    private String expectedUnicodeNonUnicodeValues = "Samantha pr�s-*";
+    private String UnicodeNonUnicodeValues = "Samantha pr�s-*";
     private String expectedLanguageSupport = "Clementine Bauch 放心測試";
-    private String expectedJsonFormatDelimiters = "Clementine Bauch <> ! & * $ # @ ~ \\ {} \"";
-    private String expectedDefaultEmail = "Nathan@yesenia.net";
+    private String JsonFormatDelimiters = "Clementine Bauch <> ! & * $ # @ ~ \\ {} \"";
+    private String defaultEmail = "Nathan@yesenia.net";
+    private String incorrectEmailFormat = "Nathan@kuku@net";
 
 
 
@@ -69,55 +70,45 @@ public class TestCases {
     public void verifyUserNameSamanthaExists (){
         given()
                 .spec(baseRequestSpec)
-                .queryParam("username", defaultUserName)
-
+                //.queryParam("username", defaultUserName)
+                .param("[2].username",defaultUserName)
                 .get(EndPoint.USERS_PATH)
          .then()
                 .assertThat()
                 .statusCode(expectedResponseSuccessStatus)
-                .body("username", containsString(defaultUserName))
-                .log().all();
+                //.body("username", containsString(defaultUserName))
+                .body("[2].username", IsEqual.equalTo("Samantha"));
+                //.log().body();
     }
-
     @Test
     //TC02: Update (Patch or Put request) username with very long  string
-    //Expected Result: Username should be update or limited with number of characters
+    //Expected Result: Username should or shouldn't update or limited with number of characters
     public void updateUserNameSamanthaNameValues (){
-
-        String longString = "{\n" +
-                "   \"username\": \"Samantha very long long long long long long long long long long long long string \"\n" +
-                "}";
 
         given()
                 .spec(baseRequestSpec)
-                .pathParam("userid",3)
-                .body(longString)
+                .pathParam("userid",defaultUserId)
+                .param("username",expectedlongString)
                 .log().all()
         .when()
-                .put(EndPoint.USERS_ID_PATH)
+                .patch(EndPoint.USERS_ID_PATH)
         .then()
-                //.spec(successResponse)
                 .assertThat()
                 .statusCode(expectedResponseSuccessStatus)
-                .body("username", containsString(expectedlongString))
-                .log().all();//username should be Samantha1
-         //Now we should back the test to default parameters.
+                .body("username", IsEqual.equalTo(defaultUserName))//verify name is not update
+                .log().all();
+         //If action support we should set back the test to default username.
+
         }
-
-
     //TC03: Update (Patch or Put request) username for id = 3 with unicode - non unicode characters
     //Expected Result: Username Field should update or failed with non unicode characters
     @Test
     public void userNameSupportNonUnicodeCharters () {
-
-        String unicodeNonUnicodeValues = "{\n" +
-                "   \"username\": \"Samantha pr�s-* \"\n" +
-                "}";
-
         given()
                 .spec(baseRequestSpec)
-                .pathParam("userid",3)
-                .body(unicodeNonUnicodeValues)
+                .pathParam("userid",defaultUserId)
+                .param("username",UnicodeNonUnicodeValues)
+                //.body(unicodeNonUnicodeValues)
                 .log().all()
                 .when()
                     .patch(EndPoint.USERS_ID_PATH)
@@ -125,21 +116,18 @@ public class TestCases {
                 .assertThat()
                 .statusCode(expectedResponseSuccessStatus)
                 .log().all()
-                .body("username", containsString(expectedUnicodeNonUnicodeValues));
+                .body("username", IsEqual.equalTo(UnicodeNonUnicodeValues));
+        //If action support we should set back the test to default username.
     }
-    //TC04: Verify (Patch or Put request) name supported AnyLanguage like Chinese 放心測試
+    //TC04: Verify (Patch or Put request) name supported Languages like Chinese 放心測試
     //Expected Result: name Field should update with supported characters
     @Test
     public void userNameSupportAnyLanguage () {
-
-        String LanguageSupport = "{\n" +
-                "   \"username\": \"Clementine Bauch 放心測試 \"\n" +
-                "}";
-
         given()
                 .spec(baseRequestSpec)
-                .pathParam("userid",3)
-                .body(LanguageSupport)
+                .pathParam("userid",defaultUserId)
+               // .body(LanguageSupport)
+                .param("username",expectedLanguageSupport)
                 .log().all()
         .when()
                 .patch(EndPoint.USERS_ID_PATH)
@@ -147,83 +135,75 @@ public class TestCases {
                 .assertThat()
                 .statusCode(expectedResponseSuccessStatus)
                 .log().all()
-                .body("username", containsString(expectedLanguageSupport));
+                .body("username", IsEqual.equalTo(expectedLanguageSupport));
+        //we sould support different types of Languages and assret that this update is supported and dont cause any crushes
+        //If action support we should set back the test to default username.
     }
 
     //TC05: Verify username update (Patch or Put request) with Json format characters and symbol characters
     //Expected Result: Field should support son format characters and symbol characters
     @Test
     public void nameSupportJsonFormatDelimiters () {
-
-        String JsonFormatDelimiters = "{\n" +
-              //  "   \"username\": \"Clementine Bauch <> ! & * $ # @ ~ \\ {} \" \"\n" +
-                "   \"username\": \"Clementine Bauch \"\n" +
-                "}";
-//        System.out.println(JsonFormatDelimiters);
-
-
       given()
               .spec(baseRequestSpec)
-              .pathParam("userid",3)
-              .body(JsonFormatDelimiters)
-               .when()
+              .pathParam("userid",defaultUserId)
+              .param("username",JsonFormatDelimiters)
+              .log().all()
+      .when()
                 .patch(EndPoint.USERS_ID_PATH)
-              .then()
-                    .assertThat()
-              .statusCode(expectedResponseSuccessStatus)
-                    .log().all()
-                    .body("name", IsEqual.equalTo(expectedJsonFormatDelimiters)) //name should be update
+      .then()
+               .assertThat()
+               .statusCode(expectedResponseSuccessStatus)
+               .log().all()
+               .body("username", IsEqual.equalTo(JsonFormatDelimiters))
+              //Name should be update or denied according to Spec but we need to observed it not break the API requests
+              //If action support we should set back the test to default username.
          ;
     }
 
-    //TC06: We should repeat those test cases for all user id #3 fields such as address.street , address.suit  company.name, company.catchPhrase etc.
-    //Expected Result: Fields should support or unsupport such fields according to system defination
+    //TC06: We should repeat those test cases for all user id #3 fields such as:
+    // 1. Address
+    // 2. Street
+    // 3. Address
+    // 4. Suit
+    // 5. Company.name
+    //Expected Result: Fields should support or un-support such fields according to system definition
 
     //TC007:Update (Patch or Put request) email for id = 3 with non support format
     //Expected Result: Field should not update with illegal format
     @Test
     public void verifyUpdateFailedForNonSupportEmailFormat() {
-        String nonSupportEmailFormat = "{\n" +
-                "   \"email\": \"nonsupport.emailformat.com \" \n" +
-                "}";
-       // System.out.println(nonSupportEmailFormat);
-        given()
+         given()
                 .spec(baseRequestSpec)
-                .pathParam("userid",3)
-                .body(nonSupportEmailFormat)
-                .when()
+                .pathParam("userid",defaultUserId)
+                .param("email",incorrectEmailFormat)
+                .log().all()
+         .when()
                 .patch(EndPoint.USERS_ID_PATH)
-                .then()
+         .then()
                 .assertThat()
                 .statusCode(expectedResponseSuccessStatus)
                 .log().all()
-                .body("email", containsString(expectedDefaultEmail));//field should not be change
+                .body("email", IsEqual.equalTo(defaultEmail));//field should not be change
     }
-
-
-
     //TC08: Verify delete action is supported or user can be delete and all data not saved in the DB
     //Expected Result: User should deleted all data should be deleted as well
     @Test
     public void deleteUserId() { //should be done
-        String b = "{\n" +
-                "   \"username\": \"Clementine Bauch \"\n" +
-                "}";
         given()
                 .spec(baseRequestSpec)
-                .pathParam("userid",3)
+                .pathParam("userid",defaultUserId)
               //  .body(deleteUserId)
-                .when()
+        .when()
                 .delete(EndPoint.USERS_ID_PATH)
-                .then()
+        .then()
                 .assertThat()
                 .statusCode(expectedResponseSuccessStatus)
+                .body("email", IsEqual.equalTo("")) //assret that values is deleted
                 .log().all();
+        //We now should inseart back the user name
     }
-
-
-
-@Test
+    @Test
     //TC09: Login: update (Put or Patch) name for users id = 3 with keywords that can hacked the account to DB via the service OWASP/XSS
     //Can be payment page , username page etc.
     //Expected Result: Databse data cannot be access
@@ -236,21 +216,21 @@ public class TestCases {
                 "submit value login </form> )"
                 +"\n" +
                 "}";
-        System.out.println(XSSLoginValues);
+       //System.out.println(XSSLoginValues);
         given()
                 .spec(baseRequestSpec)
-                .pathParam("userid",3)
-                .body(XSSLoginValues)
-                .when()
+                .pathParam("userid",defaultUserId)
+                .param("username",XSSLoginValues)
+                //.body(XSSLoginValues)
+                .log().all()
+        .when()
                 .patch(EndPoint.USERS_ID_PATH)
-              .then()
-               //.contentType(ContentType.JSON)
-              .assertThat()
-                .statusCode(expectedResponseNotFoundStatus)
-                .log().all();
+        .then()
+               .assertThat()
+               .statusCode(expectedResponseNotFoundStatus)
+               .log().all();
     }
-
-    //TC10 Back all values to default
+    //TC10 Set all Values of user name to defaults
     //Expected Results: All values back to defaults
 
 //POSTS Test Cases
