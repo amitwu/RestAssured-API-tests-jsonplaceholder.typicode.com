@@ -22,7 +22,7 @@ import io.restassured.specification.RequestSpecification;
 
 
 
-public class eTaxiTestingTests{
+public class TestCases {
     //This class created in order to preform Rest Assured Test cases
     //In order to test and give different tests scenarios in order to  test
     //the relations between 3 tables.
