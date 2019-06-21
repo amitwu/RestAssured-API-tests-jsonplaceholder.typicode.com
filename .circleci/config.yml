@@ -6,10 +6,10 @@ machine:
 test:
   override:
     - mvn test
-#orbs:
-  #hello: circleci/hello-build@0.0.7 # uses the circleci/buildpack-deps Docker image
+orbs:
+  mvntest: circleci/RestAssured-API-tests-jsonplaceholder.typicode.com # uses the circleci/buildpack-deps Docker image
 
 #workflows:
- # "Circle-CI":
-  #  jobs:
-  #    - hello/hello-build
+  "Circle-CI":
+   jobs:
+      - hello/hello-build
