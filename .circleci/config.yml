@@ -1,15 +1,51 @@
 # Use the latest 2.1 version of CircleCI pipeline processing engine, see https://circleci.com/docs/2.0/configuration-reference/
 version: 2.1
-
+#####################################
 # Use a package of configuration called an orb, see https://circleci.com/docs/2.0/orb-intro/
-orbs:
-  # Declare a dependency on the welcome-orb
-  welcome: circleci/welcome-orb@0.3.1
-
+#orbs:
+#  # Declare a dependency on the welcome-orb
+#  welcome: circleci/welcome-orb@0.3.1
+#
 # Orchestrate or schedule a set of jobs, see https://circleci.com/docs/2.0/workflows/
-workflows:
-  # Name the workflow "Welcome"
-  Welcome:
-    # Run the welcome/run job in its own container
-    jobs:
-      - welcome/run
+#workflows:
+#  # Name the workflow "Welcome"
+#  Welcome:
+#      # Run the welcome/run job in its own container
+#    jobs:
+#      - welcome/run
+###############################################
+
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:12-jdk
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+    environment:
+      # Customize the JVM maximum heap limit
+      MAVEN_OPTS: -Xmx2048m
+
+      steps:
+        - checkout
+        - # Download and cache dependencies
+        - restore_cache:
+              keys:
+                - v1-dependencies-{{ checksum "pom.xml" }}
+                # fallback to using the latest cache if no exact match is found
+                - v1-dependencies-
+
+          - run: mvn dependency:go-offline
+
+          - save_cache:
+              paths:
+                - ~/.m2
+              key: v1-dependencies-{{ checksum "pom.xml" }}
+
+          # run tests!
+          - run: mvn integration-test
