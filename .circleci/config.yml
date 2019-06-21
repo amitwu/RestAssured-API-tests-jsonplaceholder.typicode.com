@@ -16,7 +16,7 @@ jobs:
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx2048m
-      TEST_REPORTS: ~/repo/tmp/test-reports
+      TEST_REPORTS: tmp/test-reports
 
     steps:
       - checkout
@@ -40,4 +40,4 @@ jobs:
       - run: mvn integration-test
 
       - store_test_results:
-               path: ~/repo/tmp/test-reports
+               path: tmp/test-reports
